@@ -11,7 +11,8 @@ import SwiftUI
 struct TattooPreviewApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            EditorView(viewModel: EditorViewModel())
+                .environment(\.appDependencies, .live)
         }
     }
 }
