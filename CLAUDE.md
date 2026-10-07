@@ -23,8 +23,10 @@ Fora do MVP: nome final, monetização, conta de usuário, nuvem, múltiplas tat
 ## 3D
 
 - RealityKit (`RealityView`), não SceneKit (soft-deprecated desde a WWDC25).
-- Avatar em `.usdz` com blend shapes para peso/corpulência; altura via escala no eixo Y; tom de pele via material.
-- Tatuagem pintada no espaço de textura: raycast contra os triângulos do mesh (cópia na CPU), cálculo do UV por coordenadas baricêntricas e composição do PNG na textura de pele com escala/rotação/opacidade. Assim a tatuagem acompanha o corpo quando os sliders mudam. Abordagem a validar no spike (PR 2).
+- Avatar em `.usdz` (`TattooPreview/Resources/Avatar/avatar.usdz`, gerado no Blender com MPFB/MakeHuman, CC0) com UV e blend shapes para peso/corpulência; altura via escala no eixo Y.
+- Tom de pele por presets (escala Fitzpatrick I–VI), aplicados como `baseColor.tint` de um `PhysicallyBasedMaterial` sobre a textura de pele neutra/clara. Uma textura só, sem variação por tom.
+- Câmera: `.realityViewCameraControls(.orbit)` (órbita + pinch-zoom nativos).
+- Tatuagem pintada no espaço de textura: raycast contra os triângulos do mesh (cópia na CPU), cálculo do UV por coordenadas baricêntricas e composição do PNG na textura de pele em multiply (não alpha simples), com escala/rotação/opacidade; assim a mesma tinta perde contraste em pele escura, como na pele real. Assim a tatuagem acompanha o corpo quando os sliders mudam. Abordagem a validar no spike (PR 2).
 
 ## Persistência
 
