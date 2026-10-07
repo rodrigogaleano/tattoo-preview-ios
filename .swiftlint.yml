@@ -1,3 +1,7 @@
 excluded:
   - .build
   - DerivedData
+
+identifier_name:
+  excluded:
+    - uv
