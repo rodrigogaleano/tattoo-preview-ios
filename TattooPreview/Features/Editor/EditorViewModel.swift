@@ -13,9 +13,8 @@ final class EditorViewModel {
 
     private(set) var avatarState: AvatarLoadState = .loading
     private(set) var placement: TattooPlacement?
-    var skinTone: SkinTone = .typeIII
-    /// −1 (magro) a 1 (corpulento).
-    var bodyWeight: Float = 0
+    var avatar = AvatarConfiguration()
+    var isAdjustingAvatar = false
 
     func avatarDidLoad() {
         avatarState = .loaded
@@ -25,7 +24,7 @@ final class EditorViewModel {
         avatarState = .failed
     }
 
-    /// Posiciona a tatuagem no UV tocado, com largura padrão em metros convertida pela densidade de UV local.
+    /// Largura padrão em metros convertida pela densidade de UV no ponto tocado.
     func placeTattoo(at uv: SIMD2<Float>, uvUnitsPerMeter: Float) {
         placement = TattooPlacement(
             uv: uv,

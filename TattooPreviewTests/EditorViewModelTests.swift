@@ -6,6 +6,8 @@ struct EditorViewModelTests {
         let viewModel = EditorViewModel()
 
         #expect(viewModel.avatarState == .loading)
+        #expect(viewModel.avatar == AvatarConfiguration())
+        #expect(!viewModel.isAdjustingAvatar)
     }
 
     @Test func avatarDidLoadMarksLoaded() {

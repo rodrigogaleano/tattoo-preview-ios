@@ -15,6 +15,7 @@ struct EditorView: View {
             content.camera = .virtual
             content.add(sceneController.root)
         } update: { content in
+            // `ray(through:)` só existe no content, então o toque é resolvido aqui.
             guard let point = pendingTap else { return }
             let ray = content.ray(through: point, in: .local, to: .scene)
             Task { @MainActor in
@@ -27,7 +28,6 @@ struct EditorView: View {
         .realityViewCameraControls(.orbit)
         #if DEBUG
         .gesture(SpatialTapGesture(coordinateSpace: .local).onEnded { pendingTap = $0.location })
-        .safeAreaInset(edge: .bottom) { DebugTattooPanel(viewModel: viewModel) }
         #endif
         .background(Color(.systemBackground))
         .overlay {
@@ -40,23 +40,46 @@ struct EditorView: View {
                 EmptyView()
             }
         }
+        .overlay(alignment: .bottom) {
+            if viewModel.avatarState == .loaded {
+                toolbar
+            }
+        }
+        .sheet(isPresented: $viewModel.isAdjustingAvatar) {
+            AvatarAdjustmentsView(avatar: $viewModel.avatar)
+                .presentationDetents([.medium])
+                .presentationBackgroundInteraction(.enabled)
+        }
         .task {
             do {
                 try await sceneController.loadAvatar()
+                sceneController.apply(viewModel.avatar)
                 viewModel.avatarDidLoad()
             } catch {
                 viewModel.avatarDidFail()
             }
         }
-        .onChange(of: viewModel.skinTone) { _, tone in
-            sceneController.applySkinTone(tone)
-        }
-        .onChange(of: viewModel.bodyWeight) { _, weight in
-            sceneController.setBodyWeight(weight)
+        .onChange(of: viewModel.avatar) { _, avatar in
+            sceneController.apply(avatar)
         }
         .onChange(of: viewModel.placement) { _, placement in
             applyTattoo(placement)
         }
+    }
+
+    private var toolbar: some View {
+        HStack {
+            Button("Ajustar corpo", systemImage: "figure") {
+                viewModel.isAdjustingAvatar = true
+            }
+            #if DEBUG
+            Button("Remover tatuagem", systemImage: "trash", action: viewModel.removeTattoo)
+                .labelStyle(.iconOnly)
+                .disabled(viewModel.placement == nil)
+            #endif
+        }
+        .buttonStyle(.bordered)
+        .padding()
     }
 
     private func handleTap(origin: SIMD3<Float>, direction: SIMD3<Float>) {
@@ -73,7 +96,7 @@ struct EditorView: View {
 }
 
 #if DEBUG
-/// Tatuagem e controles provisórios do spike; importação e ajustes de verdade chegam nos PRs 3, 5 e 7.
+/// Provisória até a importação de PNG (PR 5).
 private enum DebugTattoo {
     static let image: CGImage? = {
         let size = CGSize(width: 512, height: 512)
@@ -90,30 +113,6 @@ private enum DebugTattoo {
             ))
         }.cgImage
     }()
-}
-
-private struct DebugTattooPanel: View {
-    @Bindable var viewModel: EditorViewModel
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Picker("Tom", selection: $viewModel.skinTone) {
-                Text("I").tag(SkinTone.typeI)
-                Text("III").tag(SkinTone.typeIII)
-                Text("VI").tag(SkinTone.typeVI)
-            }
-            .pickerStyle(.segmented)
-            HStack {
-                Text("Peso")
-                Slider(value: $viewModel.bodyWeight, in: -1...1)
-                Button("Remover", systemImage: "trash", action: viewModel.removeTattoo)
-                    .labelStyle(.iconOnly)
-                    .disabled(viewModel.placement == nil)
-            }
-        }
-        .padding()
-        .background(.regularMaterial)
-    }
 }
 #endif
 

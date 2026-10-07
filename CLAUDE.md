@@ -6,13 +6,13 @@ App iOS nativo (Swift/SwiftUI) em que o usuário monta um avatar 3D estilo "cria
 
 ## Escopo do MVP
 
-- Avatar 3D com sliders: altura, peso/corpulência e tom de pele
+- Avatar 3D com slider de peso/corpulência e presets de tom de pele
 - Câmera orbital com zoom
 - Importar PNG (Fotos e Arquivos)
 - Posicionar a tatuagem tocando no corpo; arrastar, escala (pinça), rotação, opacidade e remover
 - Persistir localmente o avatar e a tatuagem (restaurar ao reabrir o app)
 
-Fora do MVP: nome final, monetização, conta de usuário, nuvem, múltiplas tatuagens simultâneas, identidade visual. Não implementar nem adicionar abstração especulativa para isso. Sem identidade visual ainda: só componentes/cores padrão do sistema.
+Fora do MVP: nome final, monetização, conta de usuário, nuvem, múltiplas tatuagens simultâneas, identidade visual, altura do avatar (só faz sentido junto com tamanho da tatuagem em cm; quando vier, via blend shapes de altura do MPFB, não escala no eixo Y). Não implementar nem adicionar abstração especulativa para isso. Sem identidade visual ainda: só componentes/cores padrão do sistema.
 
 ## Arquitetura
 
@@ -23,10 +23,10 @@ Fora do MVP: nome final, monetização, conta de usuário, nuvem, múltiplas tat
 ## 3D
 
 - RealityKit (`RealityView`), não SceneKit (soft-deprecated desde a WWDC25).
-- Avatar em `.usdz` (`TattooPreview/Resources/Avatar/avatar.usdz`, gerado no Blender com MPFB/MakeHuman, CC0) com UV e blend shapes para peso/corpulência; altura via escala no eixo Y.
+- Avatar em `.usdz` (`TattooPreview/Resources/Avatar/avatar.usdz`, gerado no Blender com MPFB/MakeHuman, CC0) com UV e blend shapes para peso/corpulência.
 - Tom de pele por presets (escala Fitzpatrick I–VI), aplicados como `baseColor.tint` de um `PhysicallyBasedMaterial` sobre a textura de pele neutra/clara. Uma textura só, sem variação por tom.
 - Câmera: `.realityViewCameraControls(.orbit)` (órbita + pinch-zoom nativos).
-- Tatuagem pintada no espaço de textura: raycast contra os triângulos do mesh (cópia na CPU), cálculo do UV por coordenadas baricêntricas e composição do PNG na textura de pele em multiply (não alpha simples), com escala/rotação/opacidade; assim a mesma tinta perde contraste em pele escura, como na pele real. Assim a tatuagem acompanha o corpo quando os sliders mudam. Abordagem a validar no spike (PR 2).
+- Tatuagem pintada no espaço de textura: raycast contra os triângulos do mesh (cópia na CPU), cálculo do UV por coordenadas baricêntricas e composição do PNG na textura de pele em multiply (não alpha simples), com escala/rotação/opacidade; assim a mesma tinta perde contraste em pele escura, como na pele real. Assim a tatuagem acompanha o corpo quando os sliders mudam. Validada no spike (PR #3).
 
 ## Persistência
 
