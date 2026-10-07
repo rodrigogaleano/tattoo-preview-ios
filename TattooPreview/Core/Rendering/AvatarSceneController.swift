@@ -11,8 +11,7 @@ final class AvatarSceneController {
     private var body: Entity?
     private var bodyMesh: DeformableMesh?
     private var hitTester: MeshHitTester?
-    private var blendShapeWeights: [String: Float] = [:]
-    private var skinTone: SkinTone = .typeIII
+    private var configuration = AvatarConfiguration()
     private var skinTexture: TextureResource?
 
     init() {
@@ -30,30 +29,22 @@ final class AvatarSceneController {
         if let body {
             bodyMesh = Self.makeDeformableMesh(from: body, relativeTo: root)
         }
-        rebuildHitTester()
+        applyWeight()
         applyMaterial()
     }
 
-    /// Raio em coordenadas da cena.
+    func apply(_ newConfiguration: AvatarConfiguration) {
+        let old = configuration
+        configuration = newConfiguration
+        if old.weight != newConfiguration.weight { applyWeight() }
+        if old.skinTone != newConfiguration.skinTone { applyMaterial() }
+    }
+
     func hitTest(origin: SIMD3<Float>, direction: SIMD3<Float>) -> MeshHit? {
-        hitTester?.hit(origin: origin, direction: direction)
-    }
-
-    func applySkinTone(_ tone: SkinTone) {
-        skinTone = tone
-        applyMaterial()
-    }
-
-    /// `value` em −1…1: negativo puxa `weight_light`, positivo puxa `weight_heavy`.
-    func setBodyWeight(_ value: Float) {
-        blendShapeWeights = [
-            "weight_light": max(0, -value),
-            "weight_heavy": max(0, value)
-        ]
-        if let body {
-            Self.apply(weights: blendShapeWeights, to: body)
+        if hitTester == nil {
+            hitTester = bodyMesh?.hitTester(weights: blendShapeWeights)
         }
-        rebuildHitTester()
+        return hitTester?.hit(origin: origin, direction: direction)
     }
 
     func applyTattoo(_ tattoo: CGImage, placement: TattooPlacement?) throws {
@@ -74,8 +65,15 @@ final class AvatarSceneController {
         applyMaterial()
     }
 
-    private func rebuildHitTester() {
-        hitTester = bodyMesh?.hitTester(weights: blendShapeWeights)
+    private var blendShapeWeights: [String: Float] {
+        ["weight_light": max(0, -configuration.weight), "weight_heavy": max(0, configuration.weight)]
+    }
+
+    private func applyWeight() {
+        if let body {
+            Self.apply(weights: blendShapeWeights, to: body)
+        }
+        hitTester = nil
     }
 
     private func addCamera() {
@@ -98,8 +96,7 @@ final class AvatarSceneController {
 
     private func applyMaterial() {
         guard let body, var model = body.components[ModelComponent.self] else { return }
-        let rgb = skinTone.rgb
-        let tint = UIColor(red: CGFloat(rgb.x), green: CGFloat(rgb.y), blue: CGFloat(rgb.z), alpha: 1)
+        let tint = configuration.skinTone.color
 
         var material = PhysicallyBasedMaterial()
         if let skinTexture {
@@ -140,8 +137,7 @@ final class AvatarSceneController {
         return nil
     }
 
-    /// Copia vértices, UVs, índices e offsets das blend shapes para a CPU, já no espaço do mesh
-    /// (transform de cada instância aplicada), com a transform da entity até `reference`.
+    /// Cópia na CPU com a transform de cada instância já aplicada.
     static func makeDeformableMesh(from entity: Entity, relativeTo reference: Entity?) -> DeformableMesh? {
         guard let mesh = entity.components[ModelComponent.self]?.mesh else { return nil }
         var result = DeformableMesh(

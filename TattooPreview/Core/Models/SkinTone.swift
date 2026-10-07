@@ -1,6 +1,6 @@
-import Foundation
+import UIKit
 
-/// Presets de tom de pele pela escala Fitzpatrick, aplicados como tint sobre a textura neutra.
+/// Escala Fitzpatrick, aplicada como tint sobre a textura neutra.
 nonisolated enum SkinTone: Int, CaseIterable, Codable {
     case typeI = 1
     case typeII
@@ -18,5 +18,13 @@ nonisolated enum SkinTone: Int, CaseIterable, Codable {
         case .typeV: [0.49, 0.31, 0.20]
         case .typeVI: [0.29, 0.18, 0.12]
         }
+    }
+
+    var color: UIColor {
+        UIColor(red: CGFloat(rgb.x), green: CGFloat(rgb.y), blue: CGFloat(rgb.z), alpha: 1)
+    }
+
+    var romanNumeral: String {
+        ["I", "II", "III", "IV", "V", "VI"][rawValue - 1]
     }
 }
