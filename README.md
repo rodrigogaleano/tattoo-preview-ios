@@ -36,6 +36,13 @@ xcodebuild test -project TattooPreview.xcodeproj -scheme TattooPreview \
 
 Detalhes e decisões registradas em [CLAUDE.md](CLAUDE.md).
 
+## Avatar
+
+- Modelo base em `TattooPreview/Resources/Avatar/avatar.usdz`, gerado com [MPFB](https://static.makehumancommunity.org/mpfb.html) (MakeHuman para Blender, assets CC0).
+- Corpo neutro, sem roupa/cabelo, pele clara pouco saturada (o tom vem de presets no app).
+- Shape keys de peso/corpulência mantidas; export USD (.usdz) com UV, Shape Keys, Armature e Materials.
+- `AvatarAssetTests` valida mesh, UV e blend shapes do arquivo.
+
 ## Lint
 
 SwiftLint roda no CI (`.github/workflows/lint.yml`) em todo PR para `main`. Rodar localmente:
