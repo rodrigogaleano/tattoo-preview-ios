@@ -34,6 +34,19 @@ struct AvatarAssetTests {
         #expect(hit.uvUnitsPerMeter > 0)
     }
 
+    @Test func rayHitsTorsoWithHeavyWeight() async throws {
+        let avatar = try await Entity(named: "avatar", in: .main)
+        let body = try #require(AvatarSceneController.firstModelEntity(in: avatar))
+        let mesh = try #require(AvatarSceneController.makeDeformableMesh(from: body, relativeTo: nil))
+        let bounds = avatar.visualBounds(relativeTo: nil)
+        let origin = SIMD3<Float>(bounds.center.x, bounds.center.y + bounds.extents.y * 0.2, bounds.max.z + 1)
+
+        let hit = try #require(mesh.hitTester(weights: ["weight_heavy": 1]).hit(origin: origin, direction: [0, 0, -1]))
+
+        #expect((0...1).contains(hit.uv.x))
+        #expect((0...1).contains(hit.uv.y))
+    }
+
     @Test func blendShapeOffsetsMatchWeightNames() async throws {
         let avatar = try await Entity(named: "avatar", in: .main)
         let body = try #require(AvatarSceneController.firstModelEntity(in: avatar))
